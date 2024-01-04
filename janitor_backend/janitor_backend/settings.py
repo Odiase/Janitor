@@ -9,12 +9,23 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
 from pathlib import Path
 from datetime import timedelta
 
+import environ
+
+
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Take environment variables from .env file
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -41,6 +52,7 @@ INSTALLED_APPS = [
     
     # third party apps
     'rest_framework',
+    'social_django',
     
     #local apps
     'authentication_app'
@@ -82,10 +94,15 @@ WSGI_APPLICATION = 'janitor_backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'something_big', 
+        'USER': 'postgres', 
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': '127.0.0.1', 
+        'PORT': '5432',
     }
 }
+
 
 
 # Password validation
@@ -105,6 +122,16 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+)
+
+# GOOGLE AUTH
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = env('CLIENT_ID')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = env('CLIENT_SECRET')
+SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = env('REDIRECT_URI')
+
 
 
 REST_FRAMEWORK = {
