@@ -34,7 +34,7 @@ def user_logout(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def user_registration(request):
-    serializer = UserRegistrationSerializer(data=request.data)
+    serializer = UserRegistrationSerializer(data=request.data, context={'request': request})
     if serializer.is_valid():
         user = serializer.save()
         # If the serializer's response contains 'message', return it
