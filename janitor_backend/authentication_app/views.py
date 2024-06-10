@@ -36,7 +36,11 @@ def user_logout(request):
 def user_registration(request):
     serializer = UserRegistrationSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        user = serializer.save()
+        # If the serializer's response contains 'message', return it
+        if 'message' in user:
+            return user
+        # Otherwise, return the success message
         return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
