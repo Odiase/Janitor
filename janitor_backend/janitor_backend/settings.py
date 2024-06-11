@@ -184,6 +184,19 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 
+# EMAIL SETTINGS
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'odiaseefosa18@gmail.com'
+EMAIL_HOST_PASSWORD = 'dvhirskastofexvy'
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+FRONTEND_URL = 'http://your-frontend-url.com'  # Update this to your frontend URL
+
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
