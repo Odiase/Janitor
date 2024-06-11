@@ -1,5 +1,7 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+from .artisans_section.urls import *
 
 from .views import (
     user_login, 
@@ -16,5 +18,8 @@ urlpatterns = [
     path("user_logout", user_logout),
     path('register/', user_registration),
     
-    path('google_auth/', initiate_google_auth)
+    path('google_auth/', initiate_google_auth),
+
+    # Artisan Urls
+    path("artisan/", include('authentication_app.artisans_section.urls'))
 ]

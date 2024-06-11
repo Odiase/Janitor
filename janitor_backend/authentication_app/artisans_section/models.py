@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 class ArtisanProfile(models.Model):
     '''Profile For Artisans'''
 
-    user = models.OneToOneField(User, related_name="artisan_profile")
+    user = models.OneToOneField(User, related_name="artisan_profile", on_delete=models.CASCADE)
     profile_image = models.ImageField(upload_to="user_uploads/artisans/artisans_profile_images", null=False)
     phone_number = models.CharField(null=False)
     bio = models.TextField(null=False) # Description
