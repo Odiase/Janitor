@@ -73,7 +73,7 @@ ROOT_URLCONF = 'janitor_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [Path(BASE_DIR/'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -124,7 +124,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = (
-    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend', # Default Backend for username and password
+    'social_core.backends.google.GoogleOAuth2', # Custom Google OAUTH Backend.
 )
 
 # GOOGLE AUTH

@@ -7,7 +7,8 @@ from .views import (
     user_login, 
     user_logout, 
     user_registration,
-    initiate_google_auth,
+    activate_account,
+    initiate_google_auth,    
 
     #password reset views
     PasswordResetConfirmView,
@@ -21,6 +22,7 @@ urlpatterns = [
     path("login", user_login),
     path("user_logout", user_logout),
     path('register/', user_registration),
+    path("activate_account/<uidb64>/<token>/", activate_account),
     
     path('google_auth/', initiate_google_auth),
 

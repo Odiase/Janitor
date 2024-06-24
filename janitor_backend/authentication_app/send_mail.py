@@ -16,7 +16,7 @@ DOMAIN = 'tverza-c9ye.onrender.com'
 def activateEmail(request, user, user_email):
     email_subject = "Activate Your User Account."
     message = render_to_string(
-        "account_activation.html",
+        "authentication_app/account_activation.html",
         {
             "user" : user.username,
             # "domain" : request.get_host(),
@@ -42,7 +42,7 @@ def activateEmail(request, user, user_email):
 
 
 
-    email = EmailMessage(email_subject, message, from_email=settings.EMAIL_FROM, to=[user_email])
+    email = EmailMessage(email_subject, message, from_email=settings.EMAIL_HOST_USER, to=[user_email])
     email.content_type = "text/html"
     email.content_subtype = "html"
     print("Sending Mail........")
