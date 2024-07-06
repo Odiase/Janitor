@@ -55,7 +55,8 @@ INSTALLED_APPS = [
     'social_django',
     
     #local apps
-    'authentication_app'
+    'authentication_app',
+    'artisans_app',
 ]
 
 MIDDLEWARE = [
