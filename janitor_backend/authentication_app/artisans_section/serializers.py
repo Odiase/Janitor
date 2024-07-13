@@ -11,4 +11,4 @@ class ArtisanProfileSerializer(serializers.ModelSerializer):
 class ProfessionalQualificationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProfessionalQualifications
-        fields = '__all__'
+        fields = ['file', 'file_description']

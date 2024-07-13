@@ -31,6 +31,7 @@ class ProfessionalQualifications(models.Model):
 
     user = models.ForeignKey(User, related_name="professional_qualification", on_delete=models.CASCADE)
     profile = models.ForeignKey(ArtisanProfile, related_name="qualifications", on_delete=models.CASCADE)
+    file_description = models.CharField(max_length=100)
     file = models.FileField(upload_to="user_uploads/artisans/professional_qualification_files", null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
