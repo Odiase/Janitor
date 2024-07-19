@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 
 from .permissions import IsArtisan
+from .models import Rating
+from .serializers import RatingSerializer
 
 from authentication_app.artisans_section.models import ArtisanProfile, ProfessionalQualifications
 from authentication_app.artisans_section.serializers import ArtisanProfileSerializer, ProfessionalQualificationsSerializer
@@ -22,13 +24,14 @@ def viewArtisanProfile(request, username):
     try:
         user = User.objects.get(username=username)
         profile = ArtisanProfile.objects.get(user=user)
+        profile_rating = profile.average_rating()
     except:
         return Response({"message" : "No Artisan With This Username Found."}, status=404)
     
     professional_qualifications = ProfessionalQualifications.objects.filter(profile=profile)
     professional_qualifications_serializer = ProfessionalQualificationsSerializer(professional_qualifications, many=True)
     profile_serializer = ArtisanProfileSerializer(profile)
-    return Response({"data" : profile_serializer.data, "qualifications" : professional_qualifications_serializer.data}, status=200)
+    return Response({"data" : profile_serializer.data, "qualifications" : professional_qualifications_serializer.data, "rating" : profile_rating}, status=200)
 
 
 @api_view(['PUT'])
@@ -92,7 +95,7 @@ def deleteArtisanProfessionalQualification(request, file_description):
         return Response({"message": "No Qualification WIth The Provided details found."}, status=404)
 
 
-@api_view(['DELETE'])
+@api_view(['PUT'])
 @permission_classes([IsAuthenticated, IsArtisan])
 def updateArtisanProfessionalQualification(request, file_description):
     '''Updates The Artisan Profile Qualification.'''
@@ -114,3 +117,35 @@ def updateArtisanProfessionalQualification(request, file_description):
     else:
         return Response({"message": "No Qualification WIth The Provided details found."}, status=404)
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def rateArtisan(request, artisan_name):
+    '''Gives A Rating To An Artisan'''
+
+    try:
+        user = request.user
+        artisan_profile = ArtisanProfile.objects.get(user__username=artisan_name)
+    except User.DoesNotExist:
+        return Response({"message" : "User not found."}, status=404)
+    except ArtisanProfile.DoesNotExist:
+        return Response({"message" : "No Artisan Profile With This Name Found."}, status=404)
+
+    data = request.data
+    serializer = RatingSerializer(data=data)
+    if serializer.is_valid():
+        rating = Rating(
+            rater=user,
+            artisan=artisan_profile,
+            rate_score=serializer.validated_data['rate_score'],
+            comment=serializer.validated_data.get('comment', '')
+        )
+        rating.save()
+        return Response({"message" : "Rating Successfully Registered", "data" : serializer.data}, status=200)
+    return Response(serializer.errors, status=400)
+
+
+
+
+#rating, and reviews(artisan and user), artisan notif
+#artisan search

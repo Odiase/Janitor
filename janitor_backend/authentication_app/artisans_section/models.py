@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Avg
 from django.contrib.auth.models import User
 
 
@@ -24,6 +25,10 @@ class ArtisanProfile(models.Model):
     
     def __str__(self):
         return self.user.username + " Artisan Profile"
+    
+    def average_rating(self):
+        average = self.profile_ratings.aggregate(Avg('rate_score'))['rate_score__avg']
+        return round(average, 1) if average else 0.0
 
 
 class ProfessionalQualifications(models.Model):

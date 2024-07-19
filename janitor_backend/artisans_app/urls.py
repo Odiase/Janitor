@@ -4,7 +4,8 @@ from .views import (
     updateArtisanProfile,
     deleteArtisanProfile,
     deleteArtisanProfessionalQualification,
-    updateArtisanProfessionalQualification
+    updateArtisanProfessionalQualification,
+    rateArtisan
 )
 
 
@@ -13,5 +14,6 @@ urlpatterns = [
     path("profile/update", updateArtisanProfile),
     path("profile/delete", deleteArtisanProfile),
     path("qualification/delete/<file_description>", deleteArtisanProfessionalQualification),
-    path("qualification/update/<file_description>", updateArtisanProfessionalQualification)
+    path("qualification/update/<file_description>", updateArtisanProfessionalQualification),
+    path("rate_artisan/<artisan_name>", rateArtisan)
 ]
