@@ -16,4 +16,14 @@ class Rating(models.Model):
     
     def __str__(self):
         return f"Rating {self.rate_score} by {self.rater} for {self.artisan}"
-    
+
+
+class JobProposal(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    artisan = models.ForeignKey(ArtisanProfile, on_delete=models.CASCADE)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    location = models.CharField(max_length=400)
+    status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('declined', 'Declined')], default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

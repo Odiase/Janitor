@@ -10,8 +10,8 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 
 from .permissions import IsArtisan
-from .models import Rating
-from .serializers import RatingSerializer
+from .models import Rating, JobProposal
+from .serializers import RatingSerializer, JobProposalSerializer, JobProposalResponseSerializer
 
 from authentication_app.artisans_section.models import ArtisanProfile, ProfessionalQualifications
 from authentication_app.artisans_section.serializers import ArtisanProfileSerializer, ProfessionalQualificationsSerializer
@@ -214,6 +214,69 @@ def nearbyArtisanSearch(request, query, has_qualification, latitude, longitude, 
     return Response(serializer.data)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsArtisan])
+def getArtisanProposals(request):
+    artisan = ArtisanProfile.objects.get(user=request.user)
+    job_proposals = JobProposal.objects.filter(artisan=artisan)
+    
+    if job_proposals.exists():
+        print("It Exists")
+        pending_proposals = job_proposals.filter(Q(status__icontains="pending"))
+        accepted_proposals = job_proposals.filter(Q(status__icontains="accepted"))
+        
+        return Response({"all_proposals" : JobProposalResponseSerializer(job_proposals, many=True).data, "pending_proposals" : JobProposalResponseSerializer(pending_proposals, many=True).data, "accepted_proposals" : JobProposalResponseSerializer(accepted_proposals, many=True).data}, status=200)
+    return Response({"message" : "No Proposals Found"})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def createJobProposal(request, artisan_username):
+    user = request.user
+    data = request.data
+    try:
+        user_with_artisan_username = User.objects.get(username=artisan_username)
+        artisan = ArtisanProfile.objects.get(user=user_with_artisan_username)
+    except ArtisanProfile.DoesNotExist:
+        return Response({"message" : "No Artisan Found With That Username"}, status=404)
+    except User.DoesNotExist:
+        return Response({"message" : "No User Found With That Username"}, status=404)
+    
+    serializer = JobProposalSerializer(data=data)
+    if serializer.is_valid():
+        proposal = JobProposal.objects.create(
+            user=user,
+            artisan=artisan,
+            description=serializer.validated_data['description'],
+            price=serializer.validated_data['price'],
+            location = serializer.validated_data['location']
+        )
+        proposal.save()
+        serializer.id = proposal.id
+        response_serializer = JobProposalResponseSerializer(proposal)
+        return Response({"message" : f"Job Proposal Created and Sent To {artisan.user.username}", "data" : response_serializer.data}, status=201)
+    return Response(serializer.errors, status=400)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated, IsArtisan])
+def respondToJobProposal(request, proposal_id):
+    try:
+        proposal = JobProposal.objects.get(id=proposal_id)
+    except JobProposal.DoesNotExist:
+        return Response({"message": "Job proposal not found."}, status=404)
+
+    if request.user.artisan_profile != proposal.artisan:
+        return Response({"message": "You do not have permission to respond to this proposal."}, status=403)
+
+    response = request.data['response']
+    if response not in ['accepted', 'declined']:
+        return Response({"message": "Invalid response."}, status=400)
+
+    proposal.status = response
+    proposal.save()
+
+    return Response(JobProposalResponseSerializer(proposal).data, status=200)
 
 
 
