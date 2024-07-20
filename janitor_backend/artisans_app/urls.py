@@ -5,7 +5,9 @@ from .views import (
     deleteArtisanProfile,
     deleteArtisanProfessionalQualification,
     updateArtisanProfessionalQualification,
-    rateArtisan
+    rateArtisan,
+    artisanSearch,
+    nearbyArtisanSearch
 )
 
 
@@ -15,5 +17,7 @@ urlpatterns = [
     path("profile/delete", deleteArtisanProfile),
     path("qualification/delete/<file_description>", deleteArtisanProfessionalQualification),
     path("qualification/update/<file_description>", updateArtisanProfessionalQualification),
-    path("rate_artisan/<artisan_name>", rateArtisan)
+    path("rate_artisan/<artisan_name>", rateArtisan),
+    path("find_artisan_near_me/<query>/<has_qualification>/<latitude>/<longitude>", nearbyArtisanSearch),
+    path("find_artisan/<query>/<has_qualification>", artisanSearch)
 ]

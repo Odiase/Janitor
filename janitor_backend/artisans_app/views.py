@@ -1,9 +1,13 @@
+from geopy.distance import great_circle
+
 from django.shortcuts import redirect
 from rest_framework import status, generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from django.contrib.auth.models import User
+from django.db.models import Q
 
 from .permissions import IsArtisan
 from .models import Rating
@@ -143,6 +147,72 @@ def rateArtisan(request, artisan_name):
         rating.save()
         return Response({"message" : "Rating Successfully Registered", "data" : serializer.data}, status=200)
     return Response(serializer.errors, status=400)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def artisanSearch(request, query, has_qualification):
+    '''Returns Query result For Artisan Based off multiple criteria'''
+    queryset = ArtisanProfile.objects.all()
+    
+    if query:
+        queryset = queryset.filter(
+            Q(user__username__icontains=query) |
+            Q(bio_headline__icontains=query) |
+            Q(address__icontains=query) |
+            Q(facebook_link__icontains=query) |
+            Q(instagram_link__icontains=query) |
+            Q(linkedin_link__icontains=query)
+        )
+        
+    if has_qualification:
+        queryset = queryset.filter(qualifications__isnull=False).distinct()
+    
+    # Serialize the data
+    serializer = ArtisanProfileSerializer(queryset, many=True)
+    return Response(serializer.data)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def nearbyArtisanSearch(request, query, has_qualification, latitude, longitude, max_distance_km=10):
+    '''Returns Query result For Artisan Based off multiple criteria'''
+    
+    user_latitude = float(latitude)
+    user_longitude = float(longitude)
+    print(user_latitude, user_longitude)
+    queryset = ArtisanProfile.objects.all()
+    
+    if query:
+        queryset = queryset.filter(
+            Q(user__username__icontains=query) |
+            Q(bio_headline__icontains=query) |
+            Q(address__icontains=query) |
+            Q(facebook_link__icontains=query) |
+            Q(instagram_link__icontains=query) |
+            Q(linkedin_link__icontains=query)
+        )
+    if has_qualification:
+        queryset = queryset.filter(qualifications__isnull=False).distinct()
+    
+    nearby_artisans = []
+
+    for artisan in queryset:
+        artisan_location = (artisan.latitude, artisan.longitude)
+        user_location = (user_latitude, user_longitude)
+        distance = great_circle(user_location, artisan_location).kilometers
+
+        if distance <= max_distance_km:
+            artisan.distance = distance
+            nearby_artisans.append(artisan)
+    # Sort artisans by distance
+    nearby_artisans.sort(key=lambda x: x.distance)
+    
+    # Serialize the data
+    serializer = ArtisanProfileSerializer(nearby_artisans, many=True)
+    return Response(serializer.data)
+
 
 
 

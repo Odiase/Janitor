@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     # third party apps
     'rest_framework',
     'social_django',
+    'django_filters',
     
     #local apps
     'authentication_app',
