@@ -21,7 +21,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             email_message = activateEmail(self.context['request'], user, user.email)
             response = {"message": email_message}
             return response
-        elif activation_status == "This Username Already Exists With A Different Email.":
+        elif activation_status == "This Username Already Exists With A Different Email.".lower():
             raise serializers.ValidationError({"username": "This Username Already Exists With A Different Email."})
         else:
             user = User.objects.create_user(

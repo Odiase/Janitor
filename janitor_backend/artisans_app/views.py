@@ -1,22 +1,40 @@
 from geopy.distance import great_circle
 
-from django.shortcuts import redirect
-from rest_framework import status, generics
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.db.models import Q
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics, serializers, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 
 from .permissions import IsArtisan
-from .models import Rating, JobProposal
-from .serializers import RatingSerializer, JobProposalSerializer, JobProposalResponseSerializer
-
-from authentication_app.artisans_section.models import ArtisanProfile, ProfessionalQualifications
-from authentication_app.artisans_section.serializers import ArtisanProfileSerializer, ProfessionalQualificationsSerializer
+from .models import ArtisanProfile, ProfessionalQualifications, Rating, JobProposal
+from .serializers import ArtisanProfileSerializer, ProfessionalQualificationsSerializer, RatingSerializer, JobProposalSerializer, JobProposalResponseSerializer
 
 
+class ArtisanProfileCreateView(generics.CreateAPIView):
+    queryset = ArtisanProfile.objects.all()
+    serializer_class = ArtisanProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class QualificationUploadView(generics.CreateAPIView):
+    serializer_class = ProfessionalQualificationsSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        try:
+            # Assuming there's only one profile per user
+            profile = ArtisanProfile.objects.get(user=user)
+        except ArtisanProfile.DoesNotExist:
+            raise serializers.ValidationError("No Existing Artisan Profile For This User.")
+        
+        serializer.save(user=user, profile=profile)
 
 
 @api_view(['GET'])
@@ -31,11 +49,21 @@ def viewArtisanProfile(request, username):
         profile_rating = profile.average_rating()
     except:
         return Response({"message" : "No Artisan With This Username Found."}, status=404)
-    
+
     professional_qualifications = ProfessionalQualifications.objects.filter(profile=profile)
-    professional_qualifications_serializer = ProfessionalQualificationsSerializer(professional_qualifications, many=True)
+    professional_qualifications_serializer = ProfessionalQualificationsSerializer(
+        professional_qualifications,
+        many=True
+    )
     profile_serializer = ArtisanProfileSerializer(profile)
-    return Response({"data" : profile_serializer.data, "qualifications" : professional_qualifications_serializer.data, "rating" : profile_rating}, status=200)
+    return Response(
+        {
+            "data" : profile_serializer.data,
+            "qualifications" : professional_qualifications_serializer.data,
+            "rating" : profile_rating
+        },
+        status=200
+    )
 
 
 @api_view(['PUT'])

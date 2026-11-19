@@ -1,8 +1,6 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .artisans_section.urls import *
-
 from .views import (
     user_login, 
     user_logout, 
@@ -29,7 +27,4 @@ urlpatterns = [
     # Password Reset
     path('password_reset/', PasswordResetView.as_view(), name='password_reset'),
     path('password_reset_confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-
-    # Artisan Urls
-    path("artisan/", include('authentication_app.artisans_section.urls'))
 ]

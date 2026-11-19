@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 from datetime import timedelta
 
+import dj_database_url
 import environ
 
 
@@ -99,11 +100,12 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'Janitor', 
         'USER': 'postgres', 
-        'PASSWORD': env('DB_PASSWORD'),
+        'PASSWORD': "",
         'HOST': '127.0.0.1', 
         'PORT': '5432',
     }
 }
+DATABASES['default'] = dj_database_url.parse(env("DB_URL"))
 
 
 
@@ -129,13 +131,6 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend', # Default Backend for username and password
     'social_core.backends.google.GoogleOAuth2', # Custom Google OAUTH Backend.
 )
-
-# GOOGLE AUTH
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = env('CLIENT_ID')
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = env('CLIENT_SECRET')
-SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = env('REDIRECT_URI')
-
-
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -192,8 +187,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'odiaseefosa18@gmail.com'
-EMAIL_HOST_PASSWORD = 'dvhirskastofexvy'
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 FRONTEND_URL = 'http://your-frontend-url.com'  # Update this to your frontend URL

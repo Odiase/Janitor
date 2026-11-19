@@ -1,5 +1,8 @@
 from django.urls import path
 from .views import (
+    ArtisanProfileCreateView,
+    QualificationUploadView,
+    
     viewArtisanProfile,
     updateArtisanProfile,
     deleteArtisanProfile,
@@ -15,6 +18,9 @@ from .views import (
 
 
 urlpatterns = [
+    path('profile/create', ArtisanProfileCreateView.as_view(), name='artisan-profile-create'),
+    path("qualification/upload", QualificationUploadView.as_view()),
+        
     path("view_profile/<username>", viewArtisanProfile),
     path("profile/update", updateArtisanProfile),
     path("profile/delete", deleteArtisanProfile),

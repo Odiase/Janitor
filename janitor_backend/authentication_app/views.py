@@ -49,9 +49,12 @@ def user_logout(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def user_registration(request):
-    # User.objects.get(username="oduwa").delete()
-    # input(">>")
+    print("registering new user")
+    User.objects.get(username="efosa").delete()
+    # input(">")
+
     serializer = UserRegistrationSerializer(data=request.data, context={'request': request})
+
     if serializer.is_valid():
         new_user = serializer.save()
         # If the serializer's response contains 'message', return it
