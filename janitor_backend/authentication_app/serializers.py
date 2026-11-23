@@ -12,27 +12,43 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = ['username', 'email', 'password']
 
-    
     def create(self, validated_data):
-        activation_status = check_user_activation_status(validated_data['username'], validated_data['email'])
+        activation_status = check_user_activation_status(
+            validated_data['username'],
+            validated_data['email']
+        )
 
         if activation_status == "is_not_activated":
             user = User.objects.get(username=validated_data['username'])
-            email_message = activateEmail(self.context['request'], user, user.email)
-            response = {"message": email_message}
-            return response
+
+            email_message = activateEmail(
+                self.context['request'],
+                user,
+                user.email
+            )
+
+            return {"message": email_message}
+
         elif activation_status == "This Username Already Exists With A Different Email.".lower():
-            raise serializers.ValidationError({"username": "This Username Already Exists With A Different Email."})
+            raise serializers.ValidationError({
+                "username": "This Username Already Exists With A Different Email."
+            })
+
         else:
             user = User.objects.create_user(
                 username=validated_data['username'],
                 email=validated_data['email'],
-                password=validated_data['password']
+                password=validated_data['password'],
+                is_active=False
             )
-            user.is_active = False
-            email_message = activateEmail(self.context['request'], user, user.email)
-            response = {"message": email_message}
-            return response
+
+            email_message = activateEmail(
+                self.context['request'],
+                user,
+                user.email
+            )
+
+            return {"message": email_message}
 
 
 class PasswordResetSerializer(serializers.Serializer):

@@ -8,15 +8,40 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import D
+from django.contrib.gis.db.models.functions import Distance
+
 from .permissions import IsArtisan
-from .models import ArtisanProfile, ProfessionalQualifications, Rating, JobProposal
-from .serializers import ArtisanProfileSerializer, ProfessionalQualificationsSerializer, RatingSerializer, JobProposalSerializer, JobProposalResponseSerializer
+from .models import (
+    ArtisanProfile,
+    ProfessionalQualifications,
+    Rating,
+    JobProposal
+)
+from .serializers import (
+    ArtisanProfileSerializer,
+    ProfessionalQualificationsSerializer,
+    RatingSerializer,
+    JobProposalSerializer,
+    JobProposalResponseSerializer,
+    LocationSerializer,
+    NearbyArtisanSerializer
+)
 
 
 class ArtisanProfileCreateView(generics.CreateAPIView):
     queryset = ArtisanProfile.objects.all()
     serializer_class = ArtisanProfileSerializer
     permission_classes = [IsAuthenticated]
+    
+    def create(self, request, *args, **kwargs):
+        if hasattr(request.user, "artisan_profile"):
+            return Response(
+                {"message" : "Artisan profile already exists for this user."},
+                status=status.HTTP_409_CONFLICT
+            )
+        return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -42,13 +67,16 @@ class QualificationUploadView(generics.CreateAPIView):
 @permission_classes([IsAuthenticated])
 def viewArtisanProfile(request, username):
     '''Returns All Profile Details The Requested Artisan'''
-    
     try:
         user = User.objects.get(username=username)
         profile = ArtisanProfile.objects.get(user=user)
+        print("artisan profile : ", profile)
         profile_rating = profile.average_rating()
     except:
         return Response({"message" : "No Artisan With This Username Found."}, status=404)
+
+    profile.is_available = True
+    profile.save()  # delete later
 
     professional_qualifications = ProfessionalQualifications.objects.filter(profile=profile)
     professional_qualifications_serializer = ProfessionalQualificationsSerializer(
@@ -84,11 +112,12 @@ def updateArtisanProfile(request):
 
     serializer = ArtisanProfileSerializer(profile, data=request.data, partial=True)
     if serializer.is_valid():
+        print(serializer.validated_data)
         serializer.save()
         return Response(serializer.data, status=200)
     return Response(serializer.errors, status=400)
 
-    
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsArtisan])
 def deleteArtisanProfile(request):
@@ -109,20 +138,18 @@ def deleteArtisanProfile(request):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsArtisan])
-def deleteArtisanProfessionalQualification(request, file_description):
-    '''Deletes The Artisan Profile Qualification.'''
+def deleteArtisanProfessionalQualification(request, file_id):
+    '''Deletes a single Artisan Profile Qualification.'''
 
-    user = request.user
     try:
-        profile = ArtisanProfile.objects.get(user=user)
+        profile = ArtisanProfile.objects.get(user=request.user)
     except ArtisanProfile.DoesNotExist:
         return Response({"message" : "No Artisan Profile Found."}, status=404)
 
-    qualification = ProfessionalQualifications.objects.filter(profile=profile, file_description=file_description)
+    qualification = ProfessionalQualifications.objects.filter(profile=profile, id=file_id)
     if qualification.exists():
-        for i in qualification:
-            i.delete()
-        return Response({"message" : f"Qualification With Description {file_description} successfully deleted."}, status=204)
+        qualification.delete()
+        return Response({"message" : f"Qualification With ID {file_id} successfully deleted."}, status=204)
     else:
         return Response({"message": "No Qualification WIth The Provided details found."}, status=404)
 
@@ -153,7 +180,7 @@ def updateArtisanProfessionalQualification(request, file_description):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def rateArtisan(request, artisan_name):
-    '''Gives A Rating To An Artisan'''
+    '''Registers a rating for an artisan by the authenticated user.'''
 
     try:
         user = request.user
@@ -162,6 +189,19 @@ def rateArtisan(request, artisan_name):
         return Response({"message" : "User not found."}, status=404)
     except ArtisanProfile.DoesNotExist:
         return Response({"message" : "No Artisan Profile With This Name Found."}, status=404)
+
+    # Check if the user is trying to rate themselves
+    if user == artisan_profile.user:
+        return Response(
+            {"message": "You cannot rate yourself."},
+            status=status.HTTP_409_CONFLICT
+        )
+    
+    # future check for if the rater is a client and has hired the artisan before rating them
+    pass
+
+    # future check for how many times a user has rated an artisan and limit it to once per user per artisan
+    pass
 
     data = request.data
     serializer = RatingSerializer(data=data)
@@ -182,7 +222,7 @@ def rateArtisan(request, artisan_name):
 def artisanSearch(request, query, has_qualification):
     '''Returns Query result For Artisan Based off multiple criteria'''
     queryset = ArtisanProfile.objects.all()
-    
+
     if query:
         queryset = queryset.filter(
             Q(user__username__icontains=query) |
@@ -192,54 +232,80 @@ def artisanSearch(request, query, has_qualification):
             Q(instagram_link__icontains=query) |
             Q(linkedin_link__icontains=query)
         )
-        
+
     if has_qualification:
         queryset = queryset.filter(qualifications__isnull=False).distinct()
-    
+
     # Serialize the data
     serializer = ArtisanProfileSerializer(queryset, many=True)
     return Response(serializer.data)
 
 
-
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def nearbyArtisanSearch(request, query, has_qualification, latitude, longitude, max_distance_km=10):
-    '''Returns Query result For Artisan Based off multiple criteria'''
+def nearbyArtisanSearch(request):
     
-    user_latitude = float(latitude)
-    user_longitude = float(longitude)
-    print(user_latitude, user_longitude)
-    queryset = ArtisanProfile.objects.all()
-    
-    if query:
-        queryset = queryset.filter(
-            Q(user__username__icontains=query) |
-            Q(bio_headline__icontains=query) |
-            Q(address__icontains=query) |
-            Q(facebook_link__icontains=query) |
-            Q(instagram_link__icontains=query) |
-            Q(linkedin_link__icontains=query)
+    location_serializer = LocationSerializer(data=request.data)
+
+    if not location_serializer.is_valid():
+        return Response(
+            location_serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
         )
-    if has_qualification:
-        queryset = queryset.filter(qualifications__isnull=False).distinct()
-    
-    nearby_artisans = []
 
-    for artisan in queryset:
-        artisan_location = (artisan.latitude, artisan.longitude)
-        user_location = (user_latitude, user_longitude)
-        distance = great_circle(user_location, artisan_location).kilometers
+    latitude = location_serializer.validated_data["latitude"]
+    longitude = location_serializer.validated_data["longitude"]
 
-        if distance <= max_distance_km:
-            artisan.distance = distance
-            nearby_artisans.append(artisan)
-    # Sort artisans by distance
-    nearby_artisans.sort(key=lambda x: x.distance)
+    customer_point = Point(
+        longitude,
+        latitude,
+        srid=4326
+    )
+    # user_profile = request.user.artisan_profile
+    # user_location = user_profile.location
+        
+    available_artisans = (
+        ArtisanProfile.objects
+        .filter(
+            is_available=True,
+            verification_status="verified",
+            location__isnull=False,
+            # location__distance_lte=(
+            #     customer_point,
+            #     # user_location,
+            #     D(km=10)
+            # )
+            location__dwithin=(customer_point, D(km=10))
+        )
+        .exclude(user=request.user)  # Exclude the requesting user
+        .annotate(
+            distance=Distance("location", customer_point)
+        )
+        .order_by("distance")
+    )
     
-    # Serialize the data
-    serializer = ArtisanProfileSerializer(nearby_artisans, many=True)
-    return Response(serializer.data)
+    print("TOTAL ARTISANS:", available_artisans.count())
+
+    for artisan in available_artisans:
+        print(
+            "Username:", artisan.user.username,
+            "Available:", artisan.is_available,
+            "Distance:", artisan.distance.km
+        )
+
+    artisan_serializer = NearbyArtisanSerializer(
+        available_artisans,
+        many=True,
+        context={"request": request}
+    )
+
+    return Response({
+        "success": True,
+        "radius": 10,
+        "count": len(artisan_serializer.data),
+        "artisans": artisan_serializer.data
+    }, status=status.HTTP_200_OK)
+
 
 
 @api_view(['GET'])

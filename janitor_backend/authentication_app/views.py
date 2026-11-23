@@ -50,8 +50,6 @@ def user_logout(request):
 @permission_classes([AllowAny])
 def user_registration(request):
     print("registering new user")
-    User.objects.get(username="efosa").delete()
-    # input(">")
 
     serializer = UserRegistrationSerializer(data=request.data, context={'request': request})
 
@@ -66,21 +64,65 @@ def user_registration(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
-def activate_account(request, uidb64, token):
-    try:
-        # get the user with the decoded id
-        id = force_str(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(id=id)
-    except:
-        user = None
+# @api_view(['POST'])
+# def activate_account(request, uidb64, token):
+#     try:
+#         # get the user with the decoded id
+#         id = force_str(urlsafe_base64_decode(uidb64))
+#         user = User.objects.get(id=id)
+#     except:
+#         user = None
     
-    if user is not None and account_activation_token.check_token(user, token):
+#     if user is not None and account_activation_token.check_token(user, token):
+#         user.is_active = True
+#         user.save()
+#         return Response({"message" : "Email Verified and Account Activated!"}, status=200)
+#     else:
+#         return Response({"message" : "Invalid Activation Link"}, status=406)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def activate_account(request):
+
+    uidb64 = request.data.get("uid")
+    token = request.data.get("token")
+
+    if not uidb64 or not token:
+        return Response(
+            {"message": "UID and token are required."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        user_id = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=user_id)
+
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return Response(
+            {"message": "Invalid activation link."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if account_activation_token.check_token(user, token):
+
+        if user.is_active:
+            return Response(
+                {"message": "Account has already been activated."},
+                status=status.HTTP_200_OK
+            )
+
         user.is_active = True
-        user.save()
-        return Response({"message" : "Email Verified and Account Activated!"}, status=200)
-    else:
-        return Response({"message" : "Invalid Activation Link"}, status=406)
+        user.save(update_fields=["is_active"])
+
+        return Response(
+            {"message": "Email verified and account activated!"},
+            status=status.HTTP_200_OK
+        )
+
+    return Response(
+        {"message": "Invalid or expired activation link."},
+        status=status.HTTP_400_BAD_REQUEST
+    )
 
 
 ## SOCIAL MEDIA AUTHENTICATION

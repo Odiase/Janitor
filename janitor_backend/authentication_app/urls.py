@@ -20,7 +20,12 @@ urlpatterns = [
     path("login", user_login),
     path("user_logout", user_logout),
     path('register/', user_registration),
-    path("activate_account/<uidb64>/<token>/", activate_account),
+    path("activate_account/", activate_account),
+    # path(
+    #     "activate_account/<uidb64>/<token>/",
+    #     activate_account,
+    #     name="activate_account"
+    # ),
     
     path('google_auth/', initiate_google_auth),
 

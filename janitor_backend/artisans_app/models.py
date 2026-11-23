@@ -2,33 +2,103 @@ from django.db import models
 from django.db.models import Avg
 from django.contrib.auth.models import User
 
+from django.contrib.gis.db import models as gis_models
+
+
 
 class ArtisanProfile(models.Model):
-    '''Profile For Artisans'''
 
-    user = models.OneToOneField(User, related_name="artisan_profile", on_delete=models.CASCADE)
-    profile_image = models.ImageField(upload_to="user_uploads/artisans/artisans_profile_images", null=False)
-    phone_number = models.CharField(null=False)
-    bio = models.TextField(null=False) # Description
-    bio_headline = models.CharField(max_length=100) # occupation name/ profession name
-    preferences = models.JSONField(null=True, blank=True) # this will be a dict that contains all the user setting, preferences, etc
-    verification_status = models.BooleanField(default=False)
-    facebook_link = models.URLField(max_length=200, blank=True, null=True)
-    instagram_link = models.URLField(max_length=200, blank=True, null=True)
-    linkedin_link = models.URLField(max_length=200, blank=True, null=True)
-    address = models.CharField(max_length=200) # gotten from google map
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    is_artisan = True
-    
+    class VerificationStatus(models.TextChoices):
+        PENDING = "pending", "Pending"
+        VERIFIED = "verified", "Verified"
+        REJECTED = "rejected", "Rejected"
+
+    # Account relationship
+    user = models.OneToOneField(
+        User,
+        related_name="artisan_profile",
+        on_delete=models.CASCADE
+    )
+    # Profile information
+    profile_image = models.ImageField(
+        upload_to="user_uploads/artisans/profile_images/"
+    )
+    phone_number = models.CharField(
+        max_length=20
+    )
+    is_a_team_profile = models.BooleanField(
+        default=False
+    )
+    bio = models.TextField()
+    bio_headline = models.CharField(
+        max_length=100
+    )
+
+    # User preferences and settings
+    preferences = models.JSONField(
+        default=dict,
+        blank=True
+    )
+
+    # Verification
+    verification_status = models.CharField(
+        max_length=20,
+        choices=VerificationStatus.choices,
+        default=VerificationStatus.PENDING
+    )
+    is_available = models.BooleanField(default=True, null=False)
+
+    # Social media links
+    facebook_link = models.URLField(
+        max_length=200,
+        blank=True,
+        null=True
+    )
+    instagram_link = models.URLField(
+        max_length=200,
+        blank=True,
+        null=True
+    )
+    linkedin_link = models.URLField(
+        max_length=200,
+        blank=True,
+        null=True
+    )
+
+    # Location information
+    address = models.CharField(
+        max_length=400,
+        blank=True
+    )
+    location = gis_models.PointField(
+        geography=True,
+        srid=4326,
+        spatial_index=True,
+        null=True,
+        blank=True
+    )
+
+    # Timestamps
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
     def __str__(self):
-        return self.user.username + " Artisan Profile"
-    
+        return f"{self.user.username} Artisan Profile"
+
+    @property
+    def is_artisan(self):
+        return True
+
     def average_rating(self):
-        average = self.profile_ratings.aggregate(Avg('rate_score'))['rate_score__avg']
-        return round(average, 1) if average else 0.0
+        average = self.profile_ratings.aggregate(
+            average=Avg("rate_score")
+        )["average"]
+
+        return round(average, 1) if average is not None else 0.0
 
 
 class ProfessionalQualifications(models.Model):
@@ -36,7 +106,8 @@ class ProfessionalQualifications(models.Model):
 
     user = models.ForeignKey(User, related_name="professional_qualification", on_delete=models.CASCADE)
     profile = models.ForeignKey(ArtisanProfile, related_name="qualifications", on_delete=models.CASCADE)
-    file_description = models.CharField(max_length=100)
+    title = models.CharField(max_length=100)
+    file_description = models.CharField(max_length=100, null=True, blank=True)
     file = models.FileField(upload_to="user_uploads/artisans/professional_qualification_files", null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

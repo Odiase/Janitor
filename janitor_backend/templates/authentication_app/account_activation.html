@@ -1,190 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Activate Your Account</title>
-  </head>
 
-  <body
-    style="
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Activate Your Account</title>
+</head>
+
+<body style="
       margin: 0;
       padding: 0;
       background-color: #f4f6fa;
       font-family: Arial, Helvetica, sans-serif;
       color: #334155;
       -webkit-font-smoothing: antialiased;
-    "
-  >
-    <div
-      style="
+    ">
+  <div style="
         width: 100%;
         padding: 50px 20px;
         box-sizing: border-box;
         background-color: #f4f6fa;
-      "
-    >
-      <div
-        style="
+      ">
+    <div style="
           max-width: 560px;
           margin: 0 auto;
           background-color: #ffffff;
           border: 1px solid #e8edf3;
           border-radius: 12px;
           overflow: hidden;
-        "
-      >
-        <!-- Header -->
-        <div
-          style="
+        ">
+      <!-- Header -->
+      <div style="
             padding: 30px 40px;
             background-color: #111827;
             text-align: center;
-          "
-        >
-          <h1
-            style="
+          ">
+        <h1 style="
               margin: 0;
               color: #ffffff;
               font-size: 26px;
               font-weight: 700;
               letter-spacing: -0.8px;
-            "
-          >
-            Artisan<span style="color: #60a5fa;">.</span>
-          </h1>
-        </div>
+            ">
+          Artisan<span style="color: #60a5fa;">.</span>
+        </h1>
+      </div>
 
-        <!-- Content -->
-        <div style="padding: 45px 40px 40px;">
-          <h2
-            style="
+      <!-- Content -->
+      <div style="padding: 45px 40px 40px;">
+        <h2 style="
               margin: 0 0 22px;
               color: #111827;
               font-size: 24px;
               font-weight: 700;
               line-height: 1.4;
               letter-spacing: -0.5px;
-            "
-          >
-            Activate Your Account
-          </h2>
+            ">
+          Activate Your Account
+        </h2>
 
-          <p
-            style="
+        <p style="
               margin: 0 0 18px;
               color: #334155;
               font-size: 15px;
               line-height: 1.8;
-            "
-          >
-            Hello <strong style="color: #111827;">{{ user }}</strong>,
-          </p>
+            ">
+          Hello <strong style="color: #111827;">{{ user }}</strong>,
+        </p>
 
-          <p
-            style="
+        <p style="
               margin: 0 0 30px;
               color: #64748b;
               font-size: 15px;
               line-height: 1.8;
-            "
-          >
-            Thank you for registering with <strong style="color: #111827;">Artisan</strong>.
-            We're glad to have you on board.
-            To complete your registration and activate your account,
-            please click the button below.
-          </p>
+            ">
+          Thank you for registering with <strong style="color: #111827;">Artisan</strong>.
+          We're glad to have you on board.
+          To complete your registration and activate your account,
+          please click the button below.
+        </p>
 
-          <!-- Activation Button -->
-          <div style="text-align: center; margin: 35px 0;">
-            <a
-              href="{{ protocol }}://{{ domain }}/activate?userId={{ id }}&token={{ token }}/"
-              target="_blank"
-              style="
-                display: inline-block;
-                padding: 15px 36px;
-                background-color: #2563eb;
-                color: #ffffff;
-                text-decoration: none;
-                font-size: 14px;
-                font-weight: 700;
-                letter-spacing: 0.3px;
-                border-radius: 7px;
-              "
-            >
-              Activate My Account
-            </a>
-          </div>
+        <!-- Activation Button -->
+        <div style="text-align: center; margin: 35px 0;">
+          <a href="{{ activation_link }}" target="_blank" style="
+            display: inline-block;
+            padding: 15px 36px;
+            background-color: #2563eb;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            border-radius: 7px;
+        ">
+            Activate My Account
+          </a>
+        </div>
 
-          <p
-            style="
+        <p style="
               margin: 0;
               color: #94a3b8;
               font-size: 13px;
               line-height: 1.8;
               text-align: center;
-            "
-          >
-            If the button doesn't work, you can copy and paste the activation
-            link into your browser.
-          </p>
+            ">
+          If the button doesn't work, you can copy and paste the activation
+          link into your browser.
+        </p>
 
-          <div
-            style="
+        <div style="
               height: 1px;
               background-color: #edf0f4;
               margin: 35px 0 25px;
-            "
-          ></div>
+            "></div>
 
-          <p
-            style="
+        <p style="
               margin: 0 0 20px;
               color: #64748b;
               font-size: 13px;
               line-height: 1.8;
-            "
-          >
-            If you did not create a Artisan account, you can safely ignore
-            this email. No further action is required.
-          </p>
+            ">
+          If you did not create a Artisan account, you can safely ignore
+          this email. No further action is required.
+        </p>
 
-          <p
-            style="
+        <p style="
               margin: 0;
               color: #334155;
               font-size: 14px;
               line-height: 1.8;
-            "
-          >
-            Best regards,<br />
-            <strong style="color: #111827;">The Artisan Team</strong>
-          </p>
-        </div>
+            ">
+          Best regards,<br />
+          <strong style="color: #111827;">The Artisan Team</strong>
+        </p>
+      </div>
 
-        <!-- Footer -->
-        <div
-          style="
+      <!-- Footer -->
+      <div style="
             padding: 22px 30px;
             background-color: #f8fafc;
             border-top: 1px solid #edf0f4;
             text-align: center;
-          "
-        >
-          <p
-            style="
+          ">
+        <p style="
               margin: 0;
               color: #94a3b8;
               font-size: 11px;
               line-height: 1.7;
-            "
-          >
-            © {{ year }} Artisan. All rights reserved.<br />
-            This is an automated account notification. Please do not reply.
-          </p>
-        </div>
+            ">
+          © {{ year }} Artisan. All rights reserved.<br />
+          This is an automated account notification. Please do not reply.
+        </p>
       </div>
     </div>
-  </body>
+  </div>
+</body>
+
 </html>

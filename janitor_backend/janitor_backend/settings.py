@@ -52,9 +52,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     # third party apps
+    'corsheaders',
     'rest_framework',
     'social_django',
     'django_filters',
+    "django.contrib.gis",
     
     #local apps
     'authentication_app',
@@ -62,6 +64,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -106,7 +109,17 @@ DATABASES = {
     }
 }
 DATABASES['default'] = dj_database_url.parse(env("DB_URL"))
+DATABASES["default"]["ENGINE"] = (
+    "django.contrib.gis.db.backends.postgis"
+)  # postGIS for location based data types and query
 
+# postGIS settings
+OSGEO4W = env("OSGEO4W_PATH")  # Path to the GDAL library
+
+GDAL_LIBRARY_PATH = os.path.join(OSGEO4W, "bin", "gdal313.dll")
+GEOS_LIBRARY_PATH = os.path.join(OSGEO4W, "bin", "geos_c.dll")
+
+os.environ["PROJ_LIB"] = os.path.join(OSGEO4W, "share", "proj")
 
 
 # Password validation
@@ -191,10 +204,14 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-FRONTEND_URL = 'http://your-frontend-url.com'  # Update this to your frontend URL
+FRONTEND_URL = 'http://127.0.0.1:5500'
+BACKEND_URL = "http://127.0.0.1:8000"
 
 
-
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+]
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
